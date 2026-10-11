@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jom Main KVKK + KVKK!</title>
+<style>
+  :root { --ink:#26324b; --pink:#ffdfeb; --blue:#dff3ff; --yellow:#fff2bd; --green:#dff7df; --purple:#eee4ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Arial, sans-serif; color:var(--ink); background:linear-gradient(135deg,#fff4f8,#eef8ff); }
+  .wrap { max-width:760px; margin:0 auto; padding:18px; }
+  header { text-align:center; background:white; border:3px solid #f5c7dd; border-radius:24px; padding:18px 14px; box-shadow:0 5px 0 #f5c7dd; }
+  h1 { margin:0 0 8px; font-size:clamp(1.5rem,5vw,2.25rem); color:#a22c69; }
+  .subtitle { margin:0; font-size:1rem; }
+  .pill { display:inline-block; background:var(--yellow); border-radius:999px; padding:7px 12px; font-weight:bold; margin-top:12px; }
+  .card { margin-top:20px; background:white; border-radius:24px; padding:20px; border:2px solid #d8e8ff; box-shadow:0 5px 0 #d8e8ff; text-align:center; }
+  .progress { height:12px; border-radius:20px; background:#edf0f7; overflow:hidden; margin:12px 0 18px; }
+  .bar { height:100%; width:0; background:#70c6a0; transition:width .25s; }
+  .emoji { font-size:clamp(4rem,16vw,6.5rem); line-height:1.2; margin:8px 0; }
+  .prompt { font-size:1.15rem; font-weight:bold; margin:8px 0 14px; }
+  .word { font-size:clamp(1.6rem,7vw,2.4rem); letter-spacing:2px; font-weight:800; margin:10px 0 18px; }
+  .blank { display:inline-block; min-width:86px; padding:5px 10px; border-bottom:4px dashed #db78a7; color:#a22c69; }
+  .choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  button { font:inherit; cursor:pointer; touch-action:manipulation; }
+  .choice { border:2px solid #c7d9ff; border-radius:16px; background:var(--blue); padding:15px 8px; font-size:1.35rem; font-weight:bold; color:#26324b; }
+  .choice:nth-child(2) { background:var(--pink); border-color:#f4c5dc; }
+  .choice:nth-child(3) { background:var(--yellow); border-color:#efdfa0; }
+  .choice:nth-child(4) { background:var(--purple); border-color:#d8c8ff; }
+  .choice:disabled { cursor:default; opacity:.78; }
+  .feedback { min-height:34px; font-weight:bold; font-size:1.05rem; margin:14px 0 4px; }
+  .actions { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+  .mainbtn { background:#a22c69; color:white; border:0; border-radius:999px; padding:12px 20px; font-weight:bold; }
+  .secondary { background:#eef1f8; color:#26324b; border:1px solid #d7deeb; border-radius:999px; padding:12px 18px; font-weight:bold; }
+  .small { font-size:.9rem; color:#59657a; margin-top:14px; }
+  .hide { display:none; }
+  .result { font-size:1.2rem; line-height:1.6; }
+  @media(min-width:560px) { .choices { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🎮 Jom Main KVKK + KVKK!</h1>
+    <p class="subtitle">Lihat gambar, pilih suku kata yang betul dan lengkapkan perkataan.</p>
+    <span class="pill">10 soalan • Belajar sambil bermain 🌟</span>
+  </header>
+  <section class="card" id="game">
+    <div><strong id="counter">Soalan 1 daripada 10</strong> <span style="float:right">⭐ Markah: <span id="score">0</span></span></div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="emoji" id="emoji">🚧</div>
+    <div class="prompt">Pilih suku kata untuk melengkapkan perkataan ini:</div>
+    <div class="word" id="word">long + <span class="blank">?</span></div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+    <div class="actions"><button class="mainbtn hide" id="next">Soalan seterusnya ➜</button></div>
+    <p class="small">Tip: Baca kedua-dua suku kata dengan kuat selepas menjawab.</p>
+  </section>
+  <section class="card hide" id="finish">
+    <div class="emoji">🏆</div>
+    <h2>Syabas! Kamu sudah tamat!</h2>
+    <p class="result" id="result"></p>
+    <div class="actions"><button class="mainbtn" id="again">Main semula 🔄</button></div>
+  </section>
+</div>
+<script>
+const questions = [
+ {emoji:"🚧", first:"long", answer:"kang", word:"longkang", options:["kang","king","kung","kong"]},
+ {emoji:"🦂", first:"jeng", answer:"king", word:"jengking", options:["kang","king","kung","kong"]},
+ {emoji:"🥬", first:"kang", answer:"kung", word:"kangkung", options:["kang","king","kung","kong"]},
+ {emoji:"🪙", first:"jong", answer:"kong", word:"jongkong", options:["kang","king","kung","kong"]},
+ {emoji:"🏮", first:"tang", answer:"lung", word:"tanglung", options:["lung","king","kung","kang"]},
+ {emoji:"🚢", first:"tong", answer:"kang", word:"tongkang", options:["kong","kang","king","kung"]},
+ {emoji:"🌈", first:"leng", answer:"kung", word:"lengkung", options:["kang","king","kung","kong"]},
+ {emoji:"🥋", first:"beng", answer:"kung", word:"bengkung", options:["kang","kung","king","kong"]},
+ {emoji:"🗣️", first:"teng", answer:"king", word:"tengking", options:["kong","kang","king","kung"]},
+ {emoji:"🏓", first:"ping", answer:"pong", word:"pingpong", options:["pong","pang","peng","ping"]}
+];
+let index=0, score=0, answered=false;
+const $=id=>document.getElementById(id);
+function render(){
+  answered=false;
+  const q=questions[index];
+  $("game").classList.remove("hide"); $("finish").classList.add("hide");
+  $("counter").textContent=`Soalan ${index+1} daripada ${questions.length}`;
+  $("score").textContent=score; $("bar").style.width=`${index/questions.length*100}%`;
+  $("emoji").textContent=q.emoji;
+  $("word").innerHTML=`${q.first} + <span class="blank">?</span>`;
+  $("feedback").textContent="";
+  $("next").classList.add("hide");
+  $("choices").innerHTML="";
+  const opts=[...q.options].sort(()=>Math.random()-.5);
+  opts.forEach(opt=>{
+    const b=document.createElement("button"); b.className="choice"; b.textContent=opt;
+    b.onclick=()=>choose(opt,b); $("choices").appendChild(b);
+  });
+}
+function choose(opt,button){
+  if(answered)return;
+  answered=true;
+  const q=questions[index];
+  [...$("choices").children].forEach(b=>b.disabled=true);
+  if(opt===q.answer){
+    score++; $("score").textContent=score;
+    $("feedback").textContent="Betul! 🎉 "+q.word+"!";
+    $("feedback").style.color="#16804a";
+  } else {
+    $("feedback").textContent=`Cuba lagi lain kali! Jawapan yang betul ialah “${q.answer}”.`;
+    $("feedback").style.color="#b33b56";
+  }
+  $("word").innerHTML=`${q.first} + <span class="blank">${q.answer}</span>`;
+  $("bar").style.width=`${(index+1)/questions.length*100}%`;
+  $("next").textContent=index===questions.length-1?"Lihat keputusan 🏆":"Soalan seterusnya ➜";
+  $("next").classList.remove("hide");
+}
+$("next").onclick=()=>{
+  if(index<questions.length-1){index++;render();}
+  else{
+    $("game").classList.add("hide");$("finish").classList.remove("hide");
+    $("result").textContent=`Markah kamu: ${score} / ${questions.length}. `+(score===10?"Hebat! Semua jawapan betul! 🌟":score>=7?"Bagus! Teruskan berlatih ya! 💪":"Jangan putus asa. Cuba main sekali lagi! 😊");
+  }
+};
+$("again").onclick=()=>{index=0;score=0;render();};
+render();
+</script>
+</body>
+</html>
